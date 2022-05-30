@@ -24,6 +24,7 @@ def run_agents():
 
     agents = {
         "random": Agent.AgentRandom(),
+        "greedyImproved": submission.AgentGreedyImproved(),
         "greedy": Agent.AgentGreedy(),
         "minimax": submission.AgentMinimax(),
         "alphabeta": submission.AgentAlphaBeta(),
@@ -63,4 +64,5 @@ def run_agents():
 
 
 if __name__ == "__main__":
+    print("--------------------------------START GAME--------------------------------------")
     run_agents()
