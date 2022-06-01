@@ -43,13 +43,11 @@ class AgentMinimax(Agent):
         prev_move = move
         while depth:
             time_used = time.time() - start_time
-            time_left = time_limit - time_used*2
+            time_left = time_limit - time_used*depth
             if time_used < time_left:
                 prev_move=move
                 _,move = self.run_minimax_step(env, agent_id, depth, True,start_time,time_limit)
-                curr = time.time()
                 if move==None:
-                    print(time.time()-curr)
                     return prev_move
             else:
                 return move
@@ -57,7 +55,7 @@ class AgentMinimax(Agent):
         return move
 
     def run_minimax_step(self, env: TaxiEnv, agent_id, depth, maximizer, start_time, time_limit):
-        if time.time() - start_time >= time_limit+10:
+        if time.time() - start_time >= time_limit+20:
             return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id), env.get_legal_operators(agent_id)[0]
@@ -67,7 +65,7 @@ class AgentMinimax(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time()-start_time >= time_limit+10:
+                if time.time()-start_time >= time_limit+20:
                     return 0, None
                 child.apply_operator(agent_id, op)
                 v, _ = self.run_minimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
@@ -79,7 +77,7 @@ class AgentMinimax(Agent):
             cur_min = float('inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time()-start_time >= time_limit+10:
+                if time.time()-start_time >= time_limit+20:
                     return 0, None
                 child.apply_operator(agent_id, op)
                 v, _ = self.run_minimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
@@ -92,7 +90,7 @@ class AgentMinimax(Agent):
         taxi = env.get_taxi(taxi_id)
         if taxi.passenger is not None:
             distance = 16-manhattan_distance(taxi.position,taxi.passenger.destination)
-            return taxi.cash*16 + distance
+            return taxi.cash*16 + distance + taxi.fuel
         else:
             closest_passenger = 0
             if len(env.passengers):
@@ -100,7 +98,7 @@ class AgentMinimax(Agent):
                 for passenger in env.passengers:
                     passenger_distance = manhattan_distance(taxi.position, passenger.position)
                     closest_passenger = min(closest_passenger, passenger_distance)  # find the closest passenger to me
-            return taxi.cash*16 - closest_passenger
+            return taxi.cash*16 - closest_passenger + taxi.fuel
 
 class AgentAlphaBeta(Agent):
     # TODO: section c : 1
@@ -110,17 +108,24 @@ class AgentAlphaBeta(Agent):
         alpha = float('-inf')
         beta = float('inf')
         move = env.get_legal_operators(agent_id)[0]
+        prev_move = move
         while depth:
             time_used = time.time() - start_time
-            time_left = time_limit - time_used*6
-            if  time_used < time_left:
+            time_left = time_limit - time_used*depth
+            if time_used < time_left:
+                prev_move=move
                 _,move = self.run_AlphaBeta_step(env, agent_id, depth, True, alpha, beta, start_time, time_limit)
+                if move==None:
+                    return prev_move
             else:
                 return move
             depth += 1
         return move
 
+
     def run_AlphaBeta_step(self, env: TaxiEnv, agent_id, depth, maximizer, alpha, beta, start_time, time_limit):
+        if time.time() - start_time >= time_limit+20:
+            return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id),env.get_legal_operators(agent_id)[0]
         operators = env.get_legal_operators(agent_id)
@@ -129,6 +134,8 @@ class AgentAlphaBeta(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
+                if time.time() - start_time >= time_limit + 20:
+                    return 0, None
                 child.apply_operator(agent_id, op)
                 v ,_= self.run_AlphaBeta_step(child, 1-agent_id, depth-1, False, alpha, beta, start_time, time_limit)
                 if v >= cur_max:
@@ -142,6 +149,8 @@ class AgentAlphaBeta(Agent):
             cur_min = float('inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
+                if time.time() - start_time >= time_limit + 20:
+                    return 0, None
                 child.apply_operator(agent_id, op)
                 v,_ = self.run_AlphaBeta_step(child, 1-agent_id, depth-1, True, alpha, beta, start_time, time_limit)
                 if v <= cur_min:
@@ -156,7 +165,7 @@ class AgentAlphaBeta(Agent):
         taxi = env.get_taxi(taxi_id)
         if taxi.passenger is not None:
             distance = 16-manhattan_distance(taxi.position,taxi.passenger.destination)
-            return taxi.cash*16 + distance
+            return taxi.cash*16 + distance + taxi.fuel
         else:
             closest_passenger = 0
             if len(env.passengers):
@@ -164,7 +173,7 @@ class AgentAlphaBeta(Agent):
                 for passenger in env.passengers:
                     passenger_distance = manhattan_distance(taxi.position, passenger.position)
                     closest_passenger = min(closest_passenger, passenger_distance)  # find the closest passenger to me
-            return taxi.cash*16 - closest_passenger
+            return taxi.cash*16 - closest_passenger + taxi.fuel
 
 class AgentExpectimax(Agent):
     # TODO: section d : 1
@@ -172,55 +181,61 @@ class AgentExpectimax(Agent):
         start_time = time.time()
         depth = 1
         move = env.get_legal_operators(agent_id)[0]
+        prev_move = move
         while depth:
             time_used = time.time() - start_time
-            time_left = time_limit - time_used*6
+            time_left = time_limit - time_used*depth
             if time_used < time_left:
-                _,move = self.run_expectimax_step(env, agent_id, depth, True,start_time,time_limit)
+                prev_move=move
+                _, move = self.run_expectimax_step(env, agent_id, depth, True, start_time, time_limit)
+                if move==None:
+                    return prev_move
             else:
                 return move
             depth += 1
         return move
 
     def run_expectimax_step(self, env: TaxiEnv, agent_id, depth, maximizer,start_time,time_limit):
+        if time.time() - start_time >= time_limit+20:
+            return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id), env.get_legal_operators(agent_id)[0]
         operators = env.get_legal_operators(agent_id)
         children = [env.clone() for _ in operators]
-        if self.probabilistic(env):
-            probs = self.getProbs(operators)
-            v=0
-            return_op = env.get_legal_operators(agent_id)[0]
-            for child, op in zip(children, operators):
-                child.apply_operator(agent_id, op)
-                v += probs[op]*self.run_expectimax_step(child, 1 - agent_id, depth - 1, not maximizer, start_time, time_limit)[0]
-            return v, return_op
         if maximizer:
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
+                if time.time() - start_time >= time_limit + 20:
+                    return 0, None
                 child.apply_operator(agent_id, op)
-                v, _ = self.run_expectimax_step(child, 1-agent_id, depth-1, False, start_time, time_limit)
+                v, _ = self.run_expectimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
                 if v >= cur_max:
                     return_op = op
                 cur_max = max(v, cur_max)
             return cur_max, return_op
         else:
-            cur_min = float('inf')
+            probs = self.getProbs(operators)
+            v = 0
+            final_res = 0
+            cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
+                if time.time() - start_time >= time_limit + 20:
+                    return 0, None
                 child.apply_operator(agent_id, op)
-                v, _ = self.run_expectimax_step(child, 1-agent_id, depth-1, True, start_time, time_limit)
-                if v <= cur_min:
+                v, _= self.run_expectimax_step(child, 1 - agent_id, depth - 1, not maximizer, start_time, time_limit)
+                final_res += probs[op]*v
+                if v >= cur_max:
                     return_op = op
-                cur_min = min(v, cur_min)
-            return cur_min, return_op
+                cur_max = max(v, cur_max)
+            return final_res, return_op
 
     def heuristic(self, env: TaxiEnv, taxi_id: int):
         taxi = env.get_taxi(taxi_id)
         if taxi.passenger is not None:
             distance = 16-manhattan_distance(taxi.position,taxi.passenger.destination)
-            return taxi.cash*16 + distance
+            return taxi.cash*16 + distance + taxi.fuel
         else:
             closest_passenger = 0
             if len(env.passengers):
@@ -228,10 +243,7 @@ class AgentExpectimax(Agent):
                 for passenger in env.passengers:
                     passenger_distance = manhattan_distance(taxi.position, passenger.position)
                     closest_passenger = min(closest_passenger, passenger_distance)  # find the closest passenger to me
-            return taxi.cash*16 - closest_passenger
-
-    def probabilistic(self,env: TaxiEnv):
-        pass
+            return taxi.cash*16 - closest_passenger + taxi.fuel
 
     def getProbs(self,operators):
         sum = 0
@@ -249,7 +261,3 @@ class AgentExpectimax(Agent):
             return 1
         else:
             return 2
-
-def timeout(start_time,time_limit):
-    if time.time()-start_time>=time_limit:
-        raise TimeoutError
