@@ -1,11 +1,6 @@
-import pdb
 import time
-
 from Agent import Agent, AgentGreedy
 from TaxiEnv import TaxiEnv, manhattan_distance
-import random
-import signal
-
 
 class AgentGreedyImproved(AgentGreedy):
     # TODO: section a : 3
@@ -46,7 +41,9 @@ class AgentMinimax(Agent):
             time_left = time_limit - time_used*depth
             if time_used < time_left:
                 prev_move=move
+                begin = time.time()
                 _,move = self.run_minimax_step(env, agent_id, depth, True,start_time,time_limit)
+                print(time.time()-begin)
                 if move==None:
                     return prev_move
             else:
@@ -65,8 +62,6 @@ class AgentMinimax(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time()-start_time >= time_limit+20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v, _ = self.run_minimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
                 if v >= cur_max:
@@ -77,8 +72,6 @@ class AgentMinimax(Agent):
             cur_min = float('inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time()-start_time >= time_limit+20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v, _ = self.run_minimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
                 if v <= cur_min:
@@ -124,7 +117,7 @@ class AgentAlphaBeta(Agent):
 
 
     def run_AlphaBeta_step(self, env: TaxiEnv, agent_id, depth, maximizer, alpha, beta, start_time, time_limit):
-        if time.time() - start_time >= time_limit+20:
+        if time.time() - start_time >= time_limit + 20:
             return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id),env.get_legal_operators(agent_id)[0]
@@ -134,8 +127,6 @@ class AgentAlphaBeta(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time() - start_time >= time_limit + 20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v ,_= self.run_AlphaBeta_step(child, 1-agent_id, depth-1, False, alpha, beta, start_time, time_limit)
                 if v >= cur_max:
@@ -149,8 +140,6 @@ class AgentAlphaBeta(Agent):
             cur_min = float('inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time() - start_time >= time_limit + 20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v,_ = self.run_AlphaBeta_step(child, 1-agent_id, depth-1, True, alpha, beta, start_time, time_limit)
                 if v <= cur_min:
@@ -198,7 +187,7 @@ class AgentExpectimax(Agent):
     def run_expectimax_step(self, env: TaxiEnv, agent_id, depth, maximizer,start_time,time_limit):
         if time.time() - start_time >= time_limit+20:
             return 0,None
-        if env.done() or depth == 0:
+        if env.done() or depth == 0 :
             return self.heuristic(env, agent_id), env.get_legal_operators(agent_id)[0]
         operators = env.get_legal_operators(agent_id)
         children = [env.clone() for _ in operators]
@@ -206,8 +195,6 @@ class AgentExpectimax(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time() - start_time >= time_limit + 20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v, _ = self.run_expectimax_step(child, 1-agent_id, depth-1, not maximizer, start_time, time_limit)
                 if v >= cur_max:
@@ -221,8 +208,6 @@ class AgentExpectimax(Agent):
             cur_max = float('-inf')
             return_op = env.get_legal_operators(agent_id)[0]
             for child, op in zip(children, operators):
-                if time.time() - start_time >= time_limit + 20:
-                    return 0, None
                 child.apply_operator(agent_id, op)
                 v, _= self.run_expectimax_step(child, 1 - agent_id, depth - 1, not maximizer, start_time, time_limit)
                 final_res += probs[op]*v
