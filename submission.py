@@ -37,14 +37,9 @@ class AgentMinimax(Agent):
         move = env.get_legal_operators(agent_id)[0]
         prev_move = move
         while depth:
-            # time_used = time.time() - start_time
-            # time_left = time_limit - time_used*depth
-            # if time_used < time_left:
-            if time.time() - start_time >= time_limit*0.8:
+            if not time.time() - start_time >= time_limit*0.88:
                 prev_move=move
-                # begin = time.time()
                 _,move = self.run_minimax_step(env, agent_id, depth, True,start_time,time_limit)
-                # print(time.time()-begin)
                 if move==None:
                     return prev_move
             else:
@@ -53,7 +48,7 @@ class AgentMinimax(Agent):
         return move
 
     def run_minimax_step(self, env: TaxiEnv, agent_id, depth, maximizer, start_time, time_limit):
-        if time.time() - start_time >= time_limit*0.8:
+        if time.time() - start_time >= time_limit*0.88:
             return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id), env.get_legal_operators(agent_id)[0]
@@ -104,10 +99,7 @@ class AgentAlphaBeta(Agent):
         move = env.get_legal_operators(agent_id)[0]
         prev_move = move
         while depth:
-            # time_used = time.time() - start_time
-            # time_left = time_limit - time_used*depth
-            # if time_used < time_left:
-            if time.time() - start_time >= time_limit * 0.8:
+            if not time.time() - start_time >= time_limit * 0.88:
                 prev_move=move
                 _,move = self.run_AlphaBeta_step(env, agent_id, depth, True, alpha, beta, start_time, time_limit)
                 if move==None:
@@ -119,7 +111,7 @@ class AgentAlphaBeta(Agent):
 
 
     def run_AlphaBeta_step(self, env: TaxiEnv, agent_id, depth, maximizer, alpha, beta, start_time, time_limit):
-        if time.time() - start_time >= time_limit*0.8:
+        if time.time() - start_time >= time_limit*0.88:
             return 0,None
         if env.done() or depth == 0:
             return self.heuristic(env, agent_id),env.get_legal_operators(agent_id)[0]
@@ -174,10 +166,7 @@ class AgentExpectimax(Agent):
         move = env.get_legal_operators(agent_id)[0]
         prev_move = move
         while depth:
-            # time_used = time.time() - start_time
-            # time_left = time_limit - time_used*depth
-            # if time_used < time_left:
-            if time.time() - start_time >= time_limit * 0.8:
+            if not time.time() - start_time >= time_limit * 0.88:
                 prev_move=move
                 _, move = self.run_expectimax_step(env, agent_id, depth, True, start_time, time_limit)
                 if move==None:
@@ -188,7 +177,7 @@ class AgentExpectimax(Agent):
         return move
 
     def run_expectimax_step(self, env: TaxiEnv, agent_id, depth, maximizer,start_time,time_limit):
-        if time.time() - start_time >= time_limit*0.8:
+        if time.time() - start_time >= time_limit*0.88:
             return 0,None
         if env.done() or depth == 0 :
             return self.heuristic(env, agent_id), env.get_legal_operators(agent_id)[0]

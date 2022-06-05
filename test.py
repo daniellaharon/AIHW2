@@ -75,7 +75,7 @@ def test(seed, count_steps ,agent_names):
         "expectimax": submission.AgentExpectimax()
     }
     print_game = False
-    time_limit = 0.001
+    time_limit = 0.01
 
     env = TaxiEnv()
     env.generate(seed, 2*count_steps)
